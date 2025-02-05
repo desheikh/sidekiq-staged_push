@@ -14,7 +14,10 @@ module Sidekiq
       end
 
       def start
-        @thread = Thread.new(&method(:process))
+        @thread = Thread.new do
+          Thread.current.abort_on_exception = true
+          process
+        end
       end
 
       def stop
