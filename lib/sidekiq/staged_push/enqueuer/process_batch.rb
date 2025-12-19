@@ -10,15 +10,15 @@ module Sidekiq
         BATCH_SIZE = 500
 
         def call
-          jobs = StagedJob.order(:id).limit(BATCH_SIZE).to_a
-
+          jobs = StagedJob.order(:id).limit(BATCH_SIZE).pluck(:id, :payload)
           return 0 if jobs.empty?
 
           client = Sidekiq::Client.new
+          job_ids = jobs.map(&:first)
 
           StagedJob.transaction do
-            StagedJob.where(id: jobs.map(&:id)).delete_all
-            jobs.each { |job| client.push(job.payload) }
+            StagedJob.where(id: job_ids).delete_all
+            jobs.each { |(_, payload)| client.push(payload) }
           end
 
           jobs.size
