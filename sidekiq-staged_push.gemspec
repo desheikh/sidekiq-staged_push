@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.metadata = {
-    "rubygems_mfa_required" => "true"
+    "rubygems_mfa_required" => "true",
   }
 
   spec.required_ruby_version = ">= 2.7.5"

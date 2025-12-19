@@ -14,7 +14,7 @@ module Sidekiq
           migration_template(
             "migration.rb",
             "db/migrate/install_sidekiq_staged_push.rb",
-            migration_version: migration_version
+            migration_version: migration_version,
           )
         end
 

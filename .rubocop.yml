@@ -1,30 +1,103 @@
+inherit_mode:
+  merge:
+    - Exclude
+
 plugins:
+  - rubocop-performance
+  - rubocop-rails
+  - rubocop-rake
   - rubocop-rspec
+  - rubocop-rspec_rails
+  - rubocop-factory_bot
 
 AllCops:
-  NewCops: enable
-  TargetRubyVersion: 2.7
-  SuggestExtensions:
-    rubocop-rake: false
+  NewCops: disable
   Exclude:
-    - "db/**/*"
-    - "vendor/**/*"
+    - "spec/dummy/bin/**/*"
+    - "spec/dummy/db/migrate/**/*"
+    - "spec/dummy/db/schema.rb"
+    - "spec/dummy/log/**/*"
+    - "spec/dummy/tmp/**/*"
 
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
-Style/Documentation:
+Layout/ArgumentAlignment:
+  Enabled: true
+  EnforcedStyle: with_fixed_indentation
+
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+Layout/LineLength:
   Enabled: false
-Bundler/OrderedGems:
+
+Metrics/AbcSize:
   Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
 Metrics/MethodLength:
-  Max: 20
-RSpec/MessageChain:
   Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Rails/SkipsModelValidations:
+  Enabled: false
+
+RSpec/AnyInstance:
+  Enabled: false
+
 RSpec/ExampleLength:
-  Max: 50
+  Enabled: false
+
+RSpec/IndexedLet:
+  Enabled: false
+
+RSpec/LetSetup:
+  Enabled: false
+
+RSpec/MessageSpies:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
 RSpec/MultipleExpectations:
   Enabled: false
-Metrics/BlockLength:
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/NestedGroups:
+  Enabled: false
+
+Style/BlockDelimiters:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: comma
+
+Rails/ApplicationRecord:
   Exclude:
-    - "spec/**/*"
-    - "*.gemspec"
+    - "lib/**/*"
+
+RSpec/MessageChain:
+  Enabled: false

@@ -7,6 +7,10 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
     allow(Sidekiq::Client).to receive(:new).and_return(client)
   end
 
+  after do
+    Sidekiq::StagedPush::StagedJob.delete_all
+  end
+
   it "pushes jobs to Redis and removes from the database" do
     first_job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [1] })
     second_job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [2] })

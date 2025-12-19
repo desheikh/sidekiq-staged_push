@@ -16,9 +16,7 @@ module Sidekiq
 
       # Same as for Sidekiq::TransactionAwareClient we don't provide
       # transactionality for push_bulk.
-      def push_bulk(items)
-        @redis_client.push_bulk(items)
-      end
+      delegate :push_bulk, to: :@redis_client
     end
   end
 end

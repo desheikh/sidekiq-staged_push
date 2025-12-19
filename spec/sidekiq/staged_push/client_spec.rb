@@ -10,9 +10,9 @@ RSpec.describe Sidekiq::StagedPush::Client do
       client = described_class.new
       item = { "class" => TestJob, "args" => [11] }
 
-      expect { client.push(item) }
-        .to change(Sidekiq::StagedPush::StagedJob, :count)
-        .by(1)
+      expect { client.push(item) }.
+        to change(Sidekiq::StagedPush::StagedJob, :count).
+        by(1)
 
       job = Sidekiq::StagedPush::StagedJob.last
       expect(job.payload).to eq("class" => "TestJob", "args" => [11])
@@ -26,8 +26,8 @@ RSpec.describe Sidekiq::StagedPush::Client do
       first_item = { "class" => TestJob, "args" => [11] }
       second_item = { "class" => TestJob, "args" => [12] }
 
-      expect { client.push_bulk([first_item, second_item]) }
-        .not_to change(Sidekiq::StagedPush::StagedJob, :count)
+      expect { client.push_bulk([first_item, second_item]) }.
+        not_to change(Sidekiq::StagedPush::StagedJob, :count)
 
       expect(mock_redis_client).to have_received(:push_bulk).with([first_item, second_item])
     end
