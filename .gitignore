@@ -10,3 +10,10 @@
 
 # rspec failure tracking
 .rspec_status
+
+# Dummy app generated files
+/spec/dummy/db/schema.rb
+/spec/dummy/log/
+/spec/dummy/tmp/
+/spec/dummy/config/master.key
+/spec/dummy/config/credentials.yml.enc

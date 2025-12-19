@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Enqueue test jobs
+# Usage: bin/enqueue [interval] [batch_size]
+
+require_relative "../spec/dummy/config/environment"
+
+INTERVAL = (ARGV[0] || 1).to_f
+BATCH_SIZE = (ARGV[1] || 1).to_i
+
+JOBS = [
+  # Sidekiq jobs
+  { name: "ExampleJob", enqueue: -> { ExampleJob.perform_async("immediate-#{Time.now.to_i}") } },
+  { name: "ExampleJob (scheduled)", enqueue: -> { ExampleJob.perform_in(rand(5..30), "scheduled-#{Time.now.to_i}") } },
+
+  # ActiveJob jobs
+  { name: "ExampleActiveJob", enqueue: -> { ExampleActiveJob.perform_later("immediate-#{Time.now.to_i}") } },
+  { name: "ExampleActiveJob (scheduled)", enqueue: lambda {
+    ExampleActiveJob.set(wait: rand(5..30)).perform_later("scheduled-#{Time.now.to_i}")
+  } }
+].freeze
+
+puts "Enqueuing #{BATCH_SIZE} job(s) every #{INTERVAL}s (Ctrl+C to stop)"
+puts
+
+stats = Hash.new(0)
+start_time = Time.now
+
+trap("INT") do
+  puts "\n\nStats (#{(Time.now - start_time).round(1)}s):"
+  stats.sort_by { |_, v| -v }.each { |k, v| puts "  #{k}: #{v}" }
+  puts "Total: #{stats.values.sum}"
+  exit
+end
+
+loop do
+  BATCH_SIZE.times do
+    job = JOBS.sample
+    job[:enqueue].call
+    stats[job[:name]] += 1
+    puts "[#{Time.now.strftime('%H:%M:%S')}] #{job[:name]}"
+  rescue StandardError => e
+    puts "[#{Time.now.strftime('%H:%M:%S')}] ERROR: #{e.message}"
+  end
+
+  sleep INTERVAL
+end

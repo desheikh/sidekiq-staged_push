@@ -1,0 +1,15 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("PGHOST", "localhost") %>
+  username: <%= ENV.fetch("PGUSER", nil) %>
+  password: <%= ENV.fetch("PGPASSWORD", nil) %>
+
+development:
+  <<: *default
+  database: sidekiq_staged_push_development
+
+test:
+  <<: *default
+  database: sidekiq_staged_push_test
