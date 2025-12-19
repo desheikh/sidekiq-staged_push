@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 RSpec.describe Sidekiq::StagedPush::Enqueuer do
-  before do
-    # SQLite doesn't support advisory locks, so we mock it to yield immediately
-    allow(Sidekiq::StagedPush::StagedJob).to receive(:with_advisory_lock!).and_yield
-  end
-
   it "can be started and stopped" do
     allow(Sidekiq::Client).to receive_message_chain(:new, :push)
 

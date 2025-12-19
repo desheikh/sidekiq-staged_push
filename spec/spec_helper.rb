@@ -7,13 +7,20 @@ require "rails/generators"
 require "database_cleaner/active_record"
 
 db_directory = Pathname.new(File.expand_path("../db/", File.dirname(__FILE__)))
-db_file = db_directory.join("test.sqlite3")
 
-# rubocop:disable Lint/NonAtomicFileOperation
-File.delete(db_file) if File.exist?(db_file)
-# rubocop:enable Lint/NonAtomicFileOperation
+ActiveRecord::Base.establish_connection(
+  adapter: "postgresql",
+  database: "sidekiq_staged_push_test",
+  host: ENV.fetch("PGHOST", "localhost"),
+  username: ENV.fetch("PGUSER", nil),
+  password: ENV.fetch("PGPASSWORD", nil)
+)
 
-ActiveRecord::Base.establish_connection adapter: "sqlite3", database: db_file
+# Drop and recreate tables for a clean slate
+ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS sidekiq_staged_push_jobs CASCADE")
+ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS schema_migrations CASCADE")
+ActiveRecord::Base.connection.execute("DROP TABLE IF EXISTS ar_internal_metadata CASCADE")
+
 Rails::Generators.invoke("sidekiq:staged_push:install", ["--force"])
 ActiveRecord::MigrationContext.new(db_directory.join("migrate")).migrate
 
