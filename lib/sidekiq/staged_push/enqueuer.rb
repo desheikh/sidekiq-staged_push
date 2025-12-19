@@ -1,16 +1,12 @@
 # frozen_string_literal: true
 
-require "sidekiq/component"
 require "sidekiq/staged_push/enqueuer/process_batch"
 
 module Sidekiq
   module StagedPush
     class Enqueuer
-      include Sidekiq::Component
-
-      def initialize(config)
+      def initialize(_config)
         @done = false
-        @config = config
       end
 
       def start

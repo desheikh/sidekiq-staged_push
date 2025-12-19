@@ -27,8 +27,8 @@ Gem::Specification.new do |spec|
     "rubygems_mfa_required" => "true",
   }
 
-  spec.required_ruby_version = ">= 2.7.5"
+  spec.required_ruby_version = ">= 3.3.0"
 
-  spec.add_dependency "activerecord", ">= 5.2.0"
-  spec.add_dependency "sidekiq", ">= 6.5.0"
+  spec.add_dependency "activerecord", ">= 7.2.0"
+  spec.add_dependency "sidekiq", ">= 7.3.0"
 end
