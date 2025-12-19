@@ -5,7 +5,6 @@ require "sidekiq/job"
 require "sidekiq/staged_push/client"
 require "sidekiq/staged_push/enqueuer"
 require "sidekiq/staged_push/version"
-require "with_advisory_lock"
 
 module Sidekiq
   module StagedPush

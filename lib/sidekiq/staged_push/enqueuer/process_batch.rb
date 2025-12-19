@@ -10,18 +10,29 @@ module Sidekiq
         BATCH_SIZE = 500
 
         def call
-          jobs = StagedJob.order(:id).limit(BATCH_SIZE).pluck(:id, :payload)
-          return 0 if jobs.empty?
-
-          client = Sidekiq::Client.new
-          job_ids = jobs.map(&:first)
-
           StagedJob.transaction do
-            StagedJob.where(id: job_ids).delete_all
-            jobs.each { |(_, payload)| client.push(payload) }
-          end
+            jobs = StagedJob.
+                   order(:id).
+                   limit(BATCH_SIZE).
+                   lock("FOR UPDATE SKIP LOCKED").
+                   pluck(:id, :payload)
 
-          jobs.size
+            return 0 if jobs.empty?
+
+            job_ids = jobs.map(&:first)
+            StagedJob.where(id: job_ids).delete_all
+
+            push_to_redis(jobs)
+
+            jobs.size
+          end
+        end
+
+        private
+
+        def push_to_redis(jobs)
+          client = Sidekiq::Client.new
+          jobs.each { |(_, payload)| client.push(payload) }
         end
       end
     end

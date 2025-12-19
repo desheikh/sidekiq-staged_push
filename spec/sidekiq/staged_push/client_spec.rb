@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe Sidekiq::StagedPush::Client do
-  describe "push" do
-    # rubocop:disable all
-    class TestJob; end
-    # rubocop:enable all
+class TestJob; end
 
+RSpec.describe Sidekiq::StagedPush::Client do
+  describe "#push" do
     it "saves the job to the database" do
       client = described_class.new
       item = { "class" => TestJob, "args" => [11] }
@@ -17,8 +15,10 @@ RSpec.describe Sidekiq::StagedPush::Client do
       job = Sidekiq::StagedPush::StagedJob.last
       expect(job.payload).to eq("class" => "TestJob", "args" => [11])
     end
+  end
 
-    it "forwards to Sidekiq::Client if pushed in bulk" do
+  describe "#push_bulk" do
+    it "delegates to Sidekiq::Client without staging" do
       mock_redis_client = instance_double(Sidekiq::Client, push_bulk: nil)
       allow(Sidekiq::Client).to receive(:new).and_return(mock_redis_client)
 

@@ -1,23 +1,25 @@
 # frozen_string_literal: true
 
 RSpec.describe Sidekiq::StagedPush::Enqueuer do
-  it "can be started and stopped" do
-    allow(Sidekiq::Client).to receive_message_chain(:new, :push)
+  describe "#start and #stop" do
+    it "processes jobs when started and stops processing when stopped" do
+      allow(Sidekiq::Client).to receive_message_chain(:new, :push)
 
-    enqueuer = described_class.new("config")
-    enqueuer.start
+      enqueuer = described_class.new("config")
+      enqueuer.start
 
-    job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [1] })
-    sleep 1
+      job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [1] })
+      sleep 0.5
 
-    expect(Sidekiq::StagedPush::StagedJob.find_by(id: job.id)).to be_nil
+      expect(Sidekiq::StagedPush::StagedJob.find_by(id: job.id)).to be_nil
 
-    enqueuer.stop
-    sleep 1
+      enqueuer.stop
+      sleep 0.5
 
-    job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [1] })
-    sleep 1
+      job = Sidekiq::StagedPush::StagedJob.create!(payload: { args: [1] })
+      sleep 0.5
 
-    expect(Sidekiq::StagedPush::StagedJob.find_by!(id: job.id)).to eq job
+      expect(Sidekiq::StagedPush::StagedJob.find_by(id: job.id)).to eq job
+    end
   end
 end
