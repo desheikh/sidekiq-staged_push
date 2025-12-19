@@ -15,7 +15,7 @@ File.delete(db_file) if File.exist?(db_file)
 
 ActiveRecord::Base.establish_connection adapter: "sqlite3", database: db_file
 Rails::Generators.invoke("sidekiq:staged_push:install", ["--force"])
-ActiveRecord::MigrationContext.new(db_directory.join("migrate"), ActiveRecord::SchemaMigration).migrate
+ActiveRecord::MigrationContext.new(db_directory.join("migrate")).migrate
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
