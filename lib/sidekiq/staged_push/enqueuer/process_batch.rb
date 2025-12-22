@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
 require "sidekiq/staged_push/staged_job"
-require "sidekiq/client"
 
 module Sidekiq
   module StagedPush
     class Enqueuer
       class ProcessBatch
         BATCH_SIZE = 500
+
+        def initialize(client)
+          @client = client
+        end
 
         def call
           StagedJob.transaction do
@@ -31,8 +34,8 @@ module Sidekiq
         private
 
         def push_to_redis(jobs)
-          client = Sidekiq::Client.new
-          jobs.each { |(_, payload)| client.push(payload) }
+          payloads = jobs.map { |(_, payload)| payload }
+          @client.send(:raw_push, payloads)
         end
       end
     end
