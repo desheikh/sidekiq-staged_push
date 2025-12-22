@@ -3,6 +3,10 @@
 RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
   let(:client) { instance_double(Sidekiq::Client) }
 
+  after do
+    Sidekiq::StagedPush.batch_size = nil
+  end
+
   describe "#call" do
     it "bulk pushes jobs to Redis and removes from the database" do
       allow(client).to receive(:send).with(:raw_push, anything)
@@ -51,7 +55,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
     it "respects the batch size limit" do
       allow(client).to receive(:send).with(:raw_push, anything)
 
-      stub_const("#{described_class}::BATCH_SIZE", 2)
+      Sidekiq::StagedPush.batch_size = 2
 
       Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [1] })
       Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [2] })
@@ -85,7 +89,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
         Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [3], "queue" => "default" })
         Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [4], "queue" => "default" })
 
-        stub_const("#{described_class}::BATCH_SIZE", 2)
+        Sidekiq::StagedPush.batch_size = 2
 
         real_client = Sidekiq::Client.new
 

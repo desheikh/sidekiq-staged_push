@@ -6,8 +6,6 @@ module Sidekiq
   module StagedPush
     class Enqueuer
       class ProcessBatch
-        BATCH_SIZE = 500
-
         def initialize(client)
           @client = client
         end
@@ -16,7 +14,7 @@ module Sidekiq
           StagedJob.transaction do
             jobs = StagedJob.
                    order(:id).
-                   limit(BATCH_SIZE).
+                   limit(Sidekiq::StagedPush.batch_size).
                    lock("FOR UPDATE SKIP LOCKED").
                    pluck(:id, :payload)
 
