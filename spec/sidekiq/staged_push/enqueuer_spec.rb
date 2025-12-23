@@ -3,11 +3,28 @@
 RSpec.describe Sidekiq::StagedPush::Enqueuer do
   let(:client) { instance_double(Sidekiq::Client) }
   let(:config) { Sidekiq.default_configuration }
+  let(:logger) { instance_double(Sidekiq::Logger) }
 
   before do
     stub_const("#{described_class}::POLL_INTERVAL", 0.01)
     stub_const("#{described_class}::ERROR_RETRY_INTERVAL", 0.01)
+    stub_const("#{described_class}::SLOT_RETRY_INTERVAL", 0.05)
+    Sidekiq::StagedPush.slot_ttl = 2
     allow(Sidekiq::Client).to receive(:new).and_return(client)
+    allow(config).to receive(:logger).and_return(logger)
+    allow(logger).to receive(:debug)
+    allow(logger).to receive(:info)
+    allow(logger).to receive(:error)
+
+    # Clear any existing slots
+    Sidekiq.redis do |conn|
+      keys = conn.keys("#{described_class::SLOT_KEY_PREFIX}:*")
+      conn.del(*keys) if keys.any?
+    end
+  end
+
+  after do
+    Sidekiq::StagedPush.slot_ttl = nil
   end
 
   describe "#start and #stop" do
@@ -30,14 +47,71 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
 
       expect(Sidekiq::StagedPush::StagedJob.find_by(id: job.id)).to eq job
     end
+
+    it "claims a slot on start and releases on stop" do
+      allow(client).to receive(:send).with(:raw_push, anything)
+
+      enqueuer = described_class.new(config)
+      enqueuer.start
+      sleep 0.05
+
+      expect(logger).to have_received(:debug).with(/Claimed slot/)
+
+      enqueuer.stop
+      sleep 0.05
+
+      expect(logger).to have_received(:debug).with(/Released slot/)
+    end
+  end
+
+  describe "slot limiting" do
+    it "limits the number of active enqueuers to max_enqueuer_slots" do
+      Sidekiq::StagedPush.max_enqueuer_slots = 2
+      allow(client).to receive(:send).with(:raw_push, anything)
+
+      enqueuers = Array.new(4) { described_class.new(config) }
+      enqueuers.each(&:start)
+      sleep 0.05
+
+      # Only 2 should have claimed slots
+      expect(logger).to have_received(:debug).with(/Claimed slot/).twice
+      expect(logger).to have_received(:debug).with(/No slot available/).twice
+
+      enqueuers.each(&:stop)
+    ensure
+      Sidekiq::StagedPush.max_enqueuer_slots = nil
+    end
+
+    it "retries slot acquisition and claims when one becomes available" do
+      Sidekiq::StagedPush.max_enqueuer_slots = 1
+      allow(client).to receive(:send).with(:raw_push, anything)
+
+      first_enqueuer = described_class.new(config)
+      first_enqueuer.start
+      sleep 0.02
+
+      expect(logger).to have_received(:debug).with(/Claimed slot/).once
+
+      second_enqueuer = described_class.new(config)
+      second_enqueuer.start
+      sleep 0.02
+
+      expect(logger).to have_received(:debug).with(/No slot available, retrying/).once
+
+      # Release first slot - second enqueuer should automatically claim it
+      first_enqueuer.stop
+      sleep 0.1
+
+      expect(logger).to have_received(:debug).with(/Claimed slot/).twice
+
+      second_enqueuer.stop
+    ensure
+      Sidekiq::StagedPush.max_enqueuer_slots = nil
+    end
   end
 
   describe "error handling" do
     it "logs errors and continues processing" do
-      logger = instance_double(Sidekiq::Logger)
-      allow(config).to receive(:logger).and_return(logger)
-      allow(logger).to receive(:error)
-
       call_count = 0
       allow(client).to receive(:send).with(:raw_push, anything) do
         call_count += 1
@@ -59,10 +133,6 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
     end
 
     it "does not crash the processing thread on errors" do
-      logger = instance_double(Sidekiq::Logger)
-      allow(config).to receive(:logger).and_return(logger)
-      allow(logger).to receive(:error)
-
       error_count = 0
       allow(client).to receive(:send).with(:raw_push, anything) do
         error_count += 1
@@ -80,7 +150,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
       enqueuer.stop
 
       # Should have logged errors but eventually processed the job
-      expect(logger).to have_received(:error).at_least(:twice)
+      expect(logger).to have_received(:error).with(/Temporary error/).at_least(:twice)
       expect(Sidekiq::StagedPush::StagedJob.count).to eq(0)
     end
   end
