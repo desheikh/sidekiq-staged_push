@@ -9,7 +9,7 @@ module Sidekiq
     class Enqueuer
       include Sidekiq::Component
 
-      POLL_INTERVAL = 0.2
+      POLL_INTERVAL = 0.5
       ERROR_RETRY_INTERVAL = 1
       SLOT_RETRY_INTERVAL = 30
       SLOT_KEY_PREFIX = "staged_push:enqueuer:slot"
