@@ -29,7 +29,7 @@ And then execute:
 In `config/initializers/sidekiq.rb`:
 
 ```ruby
-Sidekiq::StagedPush.enable!
+Sidekiq::StagedPush.configure
 ```
 
 And finally, create the tables:
@@ -37,6 +37,18 @@ And finally, create the tables:
     $ rails generate sidekiq:staged_push:install
     $ rails db:migrate
 
+## Configuration
+
+You can configure `sidekiq-staged_push` using a configure block:
+
+```ruby
+Sidekiq::StagedPush.configure do |config|
+  config.base_class = "ApplicationRecord"  # Base class for StagedJob model (default: "ActiveRecord::Base")
+  config.batch_size = 500                   # Number of jobs to process per batch (default: 500)
+  config.max_enqueuer_slots = 5             # Maximum concurrent enqueuer processes (default: 5)
+  config.slot_ttl = 30                      # TTL in seconds for enqueuer slot locks (default: 30)
+end
+```
 
 ## Gotchas
 

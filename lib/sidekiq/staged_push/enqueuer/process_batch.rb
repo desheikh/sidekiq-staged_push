@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "sidekiq/staged_push/staged_job"
-
 module Sidekiq
   module StagedPush
     class Enqueuer
@@ -11,17 +9,17 @@ module Sidekiq
         end
 
         def call
-          StagedJob.transaction do
-            jobs = StagedJob.
+          Sidekiq::StagedPush::StagedJob.transaction do
+            jobs = Sidekiq::StagedPush::StagedJob.
                    order(:id).
-                   limit(Sidekiq::StagedPush.batch_size).
+                   limit(Sidekiq::StagedPush.configuration.batch_size).
                    lock("FOR UPDATE SKIP LOCKED").
                    pluck(:id, :payload)
 
             return 0 if jobs.empty?
 
             job_ids = jobs.map(&:first)
-            StagedJob.where(id: job_ids).delete_all
+            Sidekiq::StagedPush::StagedJob.where(id: job_ids).delete_all
 
             push_to_redis(jobs)
 

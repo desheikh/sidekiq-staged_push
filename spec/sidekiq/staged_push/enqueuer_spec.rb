@@ -9,7 +9,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
     stub_const("#{described_class}::POLL_INTERVAL", 0.01)
     stub_const("#{described_class}::ERROR_RETRY_INTERVAL", 0.01)
     stub_const("#{described_class}::SLOT_RETRY_INTERVAL", 0.05)
-    Sidekiq::StagedPush.slot_ttl = 2
+    Sidekiq::StagedPush.configuration.slot_ttl = 2
     allow(Sidekiq::Client).to receive(:new).and_return(client)
     allow(config).to receive(:logger).and_return(logger)
     allow(logger).to receive(:debug)
@@ -24,7 +24,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
   end
 
   after do
-    Sidekiq::StagedPush.slot_ttl = nil
+    Sidekiq::StagedPush.configuration.slot_ttl = 30
   end
 
   describe "#start and #stop" do
@@ -66,7 +66,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
 
   describe "slot limiting" do
     it "limits the number of active enqueuers to max_enqueuer_slots" do
-      Sidekiq::StagedPush.max_enqueuer_slots = 2
+      Sidekiq::StagedPush.configuration.max_enqueuer_slots = 2
       allow(client).to receive(:send).with(:raw_push, anything)
 
       enqueuers = Array.new(4) { described_class.new(config) }
@@ -79,11 +79,11 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
 
       enqueuers.each(&:stop)
     ensure
-      Sidekiq::StagedPush.max_enqueuer_slots = nil
+      Sidekiq::StagedPush.configuration.max_enqueuer_slots = 5
     end
 
     it "retries slot acquisition and claims when one becomes available" do
-      Sidekiq::StagedPush.max_enqueuer_slots = 1
+      Sidekiq::StagedPush.configuration.max_enqueuer_slots = 1
       allow(client).to receive(:send).with(:raw_push, anything)
 
       first_enqueuer = described_class.new(config)
@@ -106,7 +106,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer do
 
       second_enqueuer.stop
     ensure
-      Sidekiq::StagedPush.max_enqueuer_slots = nil
+      Sidekiq::StagedPush.configuration.max_enqueuer_slots = 5
     end
   end
 

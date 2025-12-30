@@ -4,7 +4,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
   let(:client) { instance_double(Sidekiq::Client) }
 
   after do
-    Sidekiq::StagedPush.batch_size = nil
+    Sidekiq::StagedPush.configuration.batch_size = 500
   end
 
   describe "#call" do
@@ -55,7 +55,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
     it "respects the batch size limit" do
       allow(client).to receive(:send).with(:raw_push, anything)
 
-      Sidekiq::StagedPush.batch_size = 2
+      Sidekiq::StagedPush.configuration.batch_size = 2
 
       Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [1] })
       Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [2] })
@@ -89,7 +89,7 @@ RSpec.describe Sidekiq::StagedPush::Enqueuer::ProcessBatch do
         Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [3], "queue" => "default" })
         Sidekiq::StagedPush::StagedJob.create!(payload: { "args" => [4], "queue" => "default" })
 
-        Sidekiq::StagedPush.batch_size = 2
+        Sidekiq::StagedPush.configuration.batch_size = 2
 
         real_client = Sidekiq::Client.new
 

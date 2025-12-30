@@ -2,7 +2,6 @@
 
 require "sidekiq/client"
 require "sidekiq/job_util"
-require "sidekiq/staged_push/staged_job"
 
 module Sidekiq
   module StagedPush
@@ -22,7 +21,7 @@ module Sidekiq
         return unless payload
 
         verify_json(payload)
-        StagedJob.create!(payload: payload)
+        Sidekiq::StagedPush::StagedJob.create!(payload: payload)
         payload["jid"]
       end
 

@@ -3,4 +3,4 @@
 require "sidekiq/rails"
 require "sidekiq/staged_push"
 
-Sidekiq::StagedPush.enable!
+Sidekiq::StagedPush.configure

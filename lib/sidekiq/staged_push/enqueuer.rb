@@ -50,10 +50,10 @@ module Sidekiq
       end
 
       def claim_slot
-        Sidekiq::StagedPush.max_enqueuer_slots.times do |i|
+        Sidekiq::StagedPush.configuration.max_enqueuer_slots.times do |i|
           key = "#{SLOT_KEY_PREFIX}:#{i}"
           acquired = redis do |conn|
-            conn.set(key, @identity, nx: true, ex: Sidekiq::StagedPush.slot_ttl)
+            conn.set(key, @identity, nx: true, ex: Sidekiq::StagedPush.configuration.slot_ttl)
           end
           return key if acquired
         end
@@ -61,10 +61,10 @@ module Sidekiq
       end
 
       def maintain_slot
-        interval = Sidekiq::StagedPush.slot_ttl / 2
+        interval = Sidekiq::StagedPush.configuration.slot_ttl / 2
         until @done
           begin
-            redis { |conn| conn.expire(@slot_key, Sidekiq::StagedPush.slot_ttl) }
+            redis { |conn| conn.expire(@slot_key, Sidekiq::StagedPush.configuration.slot_ttl) }
             sleep interval
           rescue StandardError => e
             logger.error "Error maintaining slot: #{e.class} - #{e.message}"
