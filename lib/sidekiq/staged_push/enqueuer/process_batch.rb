@@ -9,8 +9,8 @@ module Sidekiq
         end
 
         def call
-          Sidekiq::StagedPush::StagedJob.transaction do
-            jobs = Sidekiq::StagedPush::StagedJob.
+          StagedJob.transaction do
+            jobs = StagedJob.
                    order(:id).
                    limit(Sidekiq::StagedPush.configuration.batch_size).
                    lock("FOR UPDATE SKIP LOCKED").
@@ -19,7 +19,7 @@ module Sidekiq
             return 0 if jobs.empty?
 
             job_ids = jobs.map(&:first)
-            Sidekiq::StagedPush::StagedJob.where(id: job_ids).delete_all
+            StagedJob.where(id: job_ids).delete_all
 
             push_to_redis(jobs)
 

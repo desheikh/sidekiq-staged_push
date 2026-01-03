@@ -43,7 +43,7 @@ You can configure `sidekiq-staged_push` using a configure block:
 
 ```ruby
 Sidekiq::StagedPush.configure do |config|
-  config.base_class = "ApplicationRecord"  # Base class for StagedJob model (default: "ActiveRecord::Base")
+  config.base_class = "ApplicationRecord"   # Base class for StagedJob model (default: "ApplicationRecord")
   config.batch_size = 500                   # Number of jobs to process per batch (default: 500)
   config.max_enqueuer_slots = 5             # Maximum concurrent enqueuer processes (default: 5)
   config.slot_ttl = 30                      # TTL in seconds for enqueuer slot locks (default: 30)

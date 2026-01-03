@@ -21,7 +21,7 @@ module Sidekiq
         return unless payload
 
         verify_json(payload)
-        Sidekiq::StagedPush::StagedJob.create!(payload: payload)
+        StagedJob.create!(payload: payload)
         payload["jid"]
       end
 

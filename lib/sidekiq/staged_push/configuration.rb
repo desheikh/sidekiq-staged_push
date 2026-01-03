@@ -6,7 +6,7 @@ module Sidekiq
       attr_accessor :base_class, :batch_size, :max_enqueuer_slots, :slot_ttl
 
       def initialize
-        @base_class = "ActiveRecord::Base"
+        @base_class = "ApplicationRecord"
         @batch_size = 500
         @max_enqueuer_slots = 5
         @slot_ttl = 30
